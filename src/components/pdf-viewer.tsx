@@ -10,12 +10,16 @@ import { Input } from "@/components/ui/input";
 import { ZoomIn, ZoomOut, RotateCw } from "lucide-react";
 import { apiClient } from "@/lib/api-client";
 
-// Set up the worker for PDF.js
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Configure worker to avoid CDN fallback
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
+const WORKER_SRC = new URL('pdfjs-dist/build/pdf.worker.min.mjs', import.meta.url).toString();
+pdfjs.GlobalWorkerOptions.workerSrc = WORKER_SRC as string;
 
 interface PDFViewerProps {
   documentId: string;
   title: string;
+  fileUrl?: string; // optional direct URL (e.g., Supabase public URL)
 }
 
 export interface DocPage {
@@ -27,7 +31,7 @@ export interface DocPage {
   created_at: string;
 }
 
-export function PDFViewer({ documentId, title }: PDFViewerProps) {
+export function PDFViewer({ documentId, title, fileUrl }: PDFViewerProps) {
   const [numPages, setNumPages] = useState<number | null>(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1.0);
@@ -86,8 +90,10 @@ export function PDFViewer({ documentId, title }: PDFViewerProps) {
     setRotation(prev => (prev + 90) % 360);
   };
 
-  // Get the document URL from the backend API
-  const documentUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/documents/${documentId}/download`;
+  // Prefer direct file URL when available; otherwise use backend proxy endpoint
+  const documentUrl = fileUrl && fileUrl.startsWith('http')
+    ? fileUrl
+    : `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/documents/${documentId}/download`;
 
   // Only render on client-side to avoid SSR issues with PDF.js
   if (typeof window === 'undefined') {
@@ -157,35 +163,36 @@ export function PDFViewer({ documentId, title }: PDFViewerProps) {
         </div>
       </div>
       
-      <div className="flex-1 overflow-auto p-4 flex items-center justify-center">
-        {error ? (
-          <div className="text-center text-red-500">
+      <div className="flex-1 overflow-auto p-4 flex items-center justify-center relative">
+        {error && (
+          <div className="text-center text-red-500 z-10">
             <p>Error: {error}</p>
             <p className="text-sm mt-2">This document may not be a PDF or may be corrupted.</p>
           </div>
-        ) : loading ? (
-          <div className="flex items-center justify-center h-full">
-            <p>Loading PDF document...</p>
-          </div>
-        ) : (
-          <div className="relative">
-            <Document
-              file={documentUrl}
-              onLoadSuccess={onDocumentLoadSuccess}
-              onLoadError={onDocumentLoadError}
-              loading="Loading PDF..."
-              error="Failed to load PDF"
-            >
-              <Page
-                pageNumber={pageNumber}
-                scale={scale}
-                rotate={rotation}
-                renderTextLayer={true}
-                renderAnnotationLayer={true}
-              />
-            </Document>
-          </div>
         )}
+        {/* Always mount Document so it can trigger onLoadSuccess */}
+        <div className="relative">
+          <Document
+            file={documentUrl}
+            onLoadSuccess={onDocumentLoadSuccess}
+            onLoadError={onDocumentLoadError}
+            loading="Loading PDF..."
+            error="Failed to load PDF"
+          >
+            <Page
+              pageNumber={pageNumber}
+              scale={scale}
+              rotate={rotation}
+              renderTextLayer={true}
+              renderAnnotationLayer={true}
+            />
+          </Document>
+          {loading && !error && (
+            <div className="absolute inset-0 flex items-center justify-center bg-transparent">
+              <p>Loading PDF document...</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

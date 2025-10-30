@@ -537,7 +537,7 @@ export default function DocumentViewerPage({ params }: { params: Promise<{ id: s
               </TabsList>
               <TabsContent value="pdf" className="mt-4 flex-1">
                 <div className="border rounded-lg h-[500px] overflow-auto">
-                  <PDFViewer documentId={id} title={document?.title || ""} />
+                  <PDFViewer documentId={id} title={document?.title || ""} fileUrl={document?.file_path} />
                 </div>
               </TabsContent>
               <TabsContent value="text" className="mt-4 flex-1">
