@@ -1,1 +1,3 @@
-// Settings page removed
+export default function SettingsPage() {
+  return null;
+}

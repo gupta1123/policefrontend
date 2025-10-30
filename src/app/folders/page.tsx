@@ -1,1 +1,5 @@
-// Folders page removed - functionality integrated into Documents page
+import { redirect } from "next/navigation";
+
+export default function FoldersPage() {
+  redirect("/documents");
+}

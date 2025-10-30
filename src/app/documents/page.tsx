@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
+export const dynamic = "force-dynamic";
 import { 
   FileText, 
   Folder, 
@@ -46,12 +47,9 @@ interface Document {
   };
 }
 
-import { useSearchParams } from "next/navigation";
-
 export default function DocumentsPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const initialFolderId = searchParams.get('folder');
+  const [initialFolderId, setInitialFolderId] = useState<string | null>(null);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [filteredItems, setFilteredItems] = useState<(Folder | Document)[]>([]);
@@ -74,6 +72,10 @@ export default function DocumentsPage() {
 
   useEffect(() => {
     fetchData();
+    try {
+      const params = new URLSearchParams(window.location.search);
+      setInitialFolderId(params.get('folder'));
+    } catch {}
   }, []);
 
   useEffect(() => {
@@ -258,6 +260,7 @@ export default function DocumentsPage() {
   };
 
   return (
+    <Suspense fallback={null}>
     <div className="flex-1 space-y-4 p-4 pt-6">
       <div className="flex flex-col gap-4">
         <div className="flex items-center justify-between">
@@ -526,5 +529,6 @@ export default function DocumentsPage() {
         </div>
       )}
     </div>
+    </Suspense>
   );
 }
