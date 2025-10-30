@@ -1,0 +1,1 @@
+// FolderTree component removed - functionality integrated into Documents page

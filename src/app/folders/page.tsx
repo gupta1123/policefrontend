@@ -1,0 +1,1 @@
+// Folders page removed - functionality integrated into Documents page
