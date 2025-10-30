@@ -111,6 +111,17 @@ class ApiClient {
       });
     },
 
+    analyzeAsync: (filePath: string) => {
+      return this.request('/documents/analyze?async=true', {
+        method: 'POST',
+        body: JSON.stringify({ filePath }),
+      });
+    },
+
+    getAnalyzeStatus: (jobId: string) => {
+      return this.request(`/documents/analyze/${jobId}`);
+    },
+
     save: (data: {
       filePath: string;
       title: string;

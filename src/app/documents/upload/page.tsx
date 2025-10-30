@@ -109,15 +109,34 @@ export default function DocumentUploadPage() {
       setError(null);
       setStep("processing");
 
-      const result: AnalysisResult = await apiClient.documents.analyze(
-        uploadedFile.path
-      );
+      // Use async analyze with polling to avoid 30s platform timeouts
+      const startRes = await apiClient.documents.analyzeAsync(uploadedFile.path);
+      const jobId = startRes.jobId as string;
+
+      const pollStart = Date.now();
+      const pollTimeoutMs = 2 * 60 * 1000; // 2 minutes client-side timeout
+      const pollIntervalMs = 2000;
+
+      const poll = async (): Promise<AnalysisResult> => {
+        while (true) {
+          if (Date.now() - pollStart > pollTimeoutMs) {
+            throw new Error('Analysis timed out. Please try again.');
+          }
+          const statusRes = await apiClient.documents.getAnalyzeStatus(jobId);
+          if (statusRes.status === 'done' && statusRes.result) {
+            return statusRes.result as AnalysisResult;
+          }
+          if (statusRes.status === 'error') {
+            throw new Error(statusRes.error?.message || 'Analysis failed');
+          }
+          await new Promise(r => setTimeout(r, pollIntervalMs));
+        }
+      };
+
+      const result: AnalysisResult = await poll();
 
       setAnalysisResult(result);
-      
-      // Pre-fill form with extracted metadata
       setFormData(result.metadata || {});
-      
       setStep("review");
       setProcessing(false);
     } catch (err: any) {
