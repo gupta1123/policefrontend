@@ -259,6 +259,7 @@ export default function DocumentUploadPage() {
               <CardTitle>Edit Metadata</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 max-h-[calc(100vh-12rem)] overflow-y-auto">
+         
               <div>
                 <Label>Title</Label>
                 <Input
@@ -311,6 +312,23 @@ export default function DocumentUploadPage() {
               </div>
 
               <div>
+                <Label>Acts</Label>
+                <Input
+                  value={formData.acts?.join(", ") || ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      acts: e.target.value
+                        .split(",")
+                        .map((s: string) => s.trim())
+                        .filter((s: string) => s.length > 0),
+                    })
+                  }
+                  placeholder="e.g., IPC, CrPC"
+                />
+              </div>
+
+              <div>
                 <Label>Sections</Label>
                 <Input
                   value={formData.sections?.join(", ") || ""}
@@ -321,6 +339,96 @@ export default function DocumentUploadPage() {
                     })
                   }
                   placeholder="e.g., 302, 307"
+                />
+              </div>
+
+              <div>
+                <Label>Registration Date</Label>
+                <Input
+                  type="datetime-local"
+                  value={formData.registration_ts ? (() => { const d = new Date(formData.registration_ts); const pad = (n:number)=> String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; })() : ""}
+                  onChange={(e) =>
+                    setFormData({
+                      ...formData,
+                      registration_ts: e.target.value ? new Date(e.target.value).toISOString() : null,
+                    })
+                  }
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Occurrence From</Label>
+                  <Input
+                    type="datetime-local"
+                    value={formData.occurrence_from_ts ? (() => { const d = new Date(formData.occurrence_from_ts); const pad = (n:number)=> String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; })() : ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        occurrence_from_ts: e.target.value ? new Date(e.target.value).toISOString() : null,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Occurrence To</Label>
+                  <Input
+                    type="datetime-local"
+                    value={formData.occurrence_to_ts ? (() => { const d = new Date(formData.occurrence_to_ts); const pad = (n:number)=> String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; })() : ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        occurrence_to_ts: e.target.value ? new Date(e.target.value).toISOString() : null,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>Place of Occurrence</Label>
+                <Textarea
+                  value={formData.place_address || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, place_address: e.target.value })
+                  }
+                  rows={2}
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>GD Entry Number</Label>
+                  <Input
+                    value={formData.gd_entry_no || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, gd_entry_no: e.target.value })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>GD Entry Date</Label>
+                  <Input
+                    type="datetime-local"
+                    value={formData.gd_entry_ts ? (() => { const d = new Date(formData.gd_entry_ts); const pad = (n:number)=> String(n).padStart(2,'0'); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`; })() : ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        gd_entry_ts: e.target.value ? new Date(e.target.value).toISOString() : null,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>Information Mode</Label>
+                <Input
+                  value={formData.information_mode || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, information_mode: e.target.value })
+                  }
+                  placeholder="e.g., Written, Oral"
                 />
               </div>
 
@@ -358,8 +466,106 @@ export default function DocumentUploadPage() {
                     }
                     placeholder="Phone"
                   />
+                  <Textarea
+                    value={formData.informant.addr || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        informant: { ...formData.informant, addr: e.target.value },
+                      })
+                    }
+                    placeholder="Address"
+                    rows={2}
+                  />
                 </div>
               )}
+
+              <div>
+                <Label>Accused Names (comma-separated)</Label>
+                <Input
+                  value={(formData.accused_list?.map((a: any) => a?.name).filter(Boolean).join(", ") || "")}
+                  onChange={(e) => {
+                    const names = e.target.value
+                      .split(",")
+                      .map((s: string) => s.trim())
+                      .filter((s: string) => s.length > 0);
+                    setFormData({
+                      ...formData,
+                      accused_list: names.map((n: string) => ({ name: n })),
+                    });
+                  }}
+                  placeholder="e.g., John Doe, Jane Doe"
+                />
+              </div>
+
+              <div>
+                <Label>Victim Names (comma-separated)</Label>
+                <Input
+                  value={(formData.victim_list?.map((v: any) => v?.name).filter(Boolean).join(", ") || "")}
+                  onChange={(e) => {
+                    const names = e.target.value
+                      .split(",")
+                      .map((s: string) => s.trim())
+                      .filter((s: string) => s.length > 0);
+                    setFormData({
+                      ...formData,
+                      victim_list: names.map((n: string) => ({ name: n })),
+                    });
+                  }}
+                  placeholder="e.g., Rahul, Sita"
+                />
+              </div>
+
+              {/* Property */}
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Property Lost</Label>
+                  <Textarea
+                    value={formData.property?.lost || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        property: { ...(formData.property || {}), lost: e.target.value },
+                      })
+                    }
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <Label>Property Recovered</Label>
+                  <Textarea
+                    value={formData.property?.recovered || ""}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        property: { ...(formData.property || {}), recovered: e.target.value },
+                      })
+                    }
+                    rows={2}
+                  />
+                </div>
+              </div>
+
+              {/* Vehicles as lines: reg_no | type */}
+              <div>
+                <Label>Vehicles (one per line: reg_no | type)</Label>
+                <Textarea
+                  value={(formData.vehicle?.map((v: any) => `${v.reg_no || ""}${v.type ? ` | ${v.type}` : ""}`).join("\n") || "")}
+                  onChange={(e) => {
+                    const vehicles = e.target.value
+                      .split("\n")
+                      .map((line: string) => line.trim())
+                      .filter((line: string) => line.length > 0)
+                      .map((line: string) => {
+                        const [reg, type] = line.split("|").map((s) => s.trim());
+                        return { reg_no: reg || "", type: type || null };
+                      });
+                    setFormData({ ...formData, vehicle: vehicles });
+                  }}
+                  placeholder="MH12AB1234 | Scooter"
+                  rows={3}
+                />
+              </div>
 
               <div className="flex gap-2 pt-4 sticky bottom-0 bg-background border-t pt-4 mt-4">
                 <Button
@@ -425,6 +631,42 @@ export default function DocumentUploadPage() {
                   </div>
                 </TabsContent>
               </Tabs>
+
+              {/* Additional Extracted Details (read-only preview) */}
+              <div className="mt-6 space-y-4">
+                <h4 className="font-medium">Extracted Details (Preview)</h4>
+                {/* Accused detailed list */}
+                {Array.isArray(formData.accused_list) && formData.accused_list.length > 0 && (
+                  <div className="text-sm border rounded p-3 space-y-2">
+                    <p className="text-muted-foreground">Accused</p>
+                    {formData.accused_list.map((a: any, i: number) => (
+                      <div key={i} className="grid grid-cols-2 gap-2 border-b pb-2 last:border-0">
+                        <div><span className="text-muted-foreground">Name:</span> {a?.name || '-'}</div>
+                        <div><span className="text-muted-foreground">Age:</span> {a?.age ?? '-'}</div>
+                        <div><span className="text-muted-foreground">Gender:</span> {a?.gender || '-'}</div>
+                        <div><span className="text-muted-foreground">Father:</span> {a?.father_name || '-'}</div>
+                        <div className="col-span-2"><span className="text-muted-foreground">Address:</span> {a?.addr || '-'}</div>
+                        <div className="col-span-2"><span className="text-muted-foreground">Aadhaar:</span> {a?.ids?.aadhaar || '-'}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Victim detailed list */}
+                {Array.isArray(formData.victim_list) && formData.victim_list.length > 0 && (
+                  <div className="text-sm border rounded p-3 space-y-2">
+                    <p className="text-muted-foreground">Victims</p>
+                    {formData.victim_list.map((v: any, i: number) => (
+                      <div key={i} className="grid grid-cols-2 gap-2 border-b pb-2 last:border-0">
+                        <div><span className="text-muted-foreground">Name:</span> {v?.name || '-'}</div>
+                        <div><span className="text-muted-foreground">Age:</span> {v?.age ?? '-'}</div>
+                        <div><span className="text-muted-foreground">Gender:</span> {v?.gender || '-'}</div>
+                        <div className="col-span-2"><span className="text-muted-foreground">Injury:</span> {v?.injury || '-'}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </div>
